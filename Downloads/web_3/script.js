@@ -290,4 +290,197 @@ class Game2048 {
         
         return { line: result, score, moved };
     }
+    isGameOver() {
+        
+        for (let i = 0; i < this.size; i++) {
+            for (let j = 0; j < this.size; j++) {
+                if (this.board[i][j] === 0) return false;
+            }
+        }
+        
+
+        for (let i = 0; i < this.size; i++) {
+            for (let j = 0; j < this.size - 1; j++) {
+                if (this.board[i][j] === this.board[i][j + 1]) return false;
+            }
+        }
+        
+        
+        for (let j = 0; j < this.size; j++) {
+            for (let i = 0; i < this.size - 1; i++) {
+                if (this.board[i][j] === this.board[i + 1][j]) return false;
+            }
+        }
+        
+        return true;
+    }
+
+    undo() {
+        if (this.gameOver || 
+            document.querySelector('.game-overlay.active') || 
+            document.querySelector('.modal.active') ||
+            this.history.length === 0) {
+            return;
+        }
+        
+        const lastState = this.history.pop();
+        this.board = lastState.board;
+        this.score = lastState.score;
+        this.renderBoard();
+        this.saveGame();
+    }
+
+    animateMove() {
+        const cells = document.querySelectorAll('.cell');
+        cells.forEach(cell => {
+            cell.classList.add('moving');
+            setTimeout(() => {
+                cell.classList.remove('moving');
+            }, 150);
+        });
+    }
+
+    animateMerge() {
+        const cells = document.querySelectorAll('.cell');
+        cells.forEach(cell => {
+            if (cell.textContent) {
+                cell.classList.add('merging');
+                setTimeout(() => {
+                    cell.classList.remove('merging');
+                }, 200);
+            }
+        });
+    }
+
+    renderBoard() {
+        const cells = document.querySelectorAll('.cell');
+        for (let i = 0; i < this.size; i++) {
+            for (let j = 0; j < this.size; j++) {
+                const index = i * this.size + j;
+                const value = this.board[i][j];
+                cells[index].textContent = value || '';
+                cells[index].setAttribute('data-value', value || '');
+            }
+        }
+        document.getElementById('score').textContent = this.score;
+    }
+
+    showGameOver() {
+        const overlay = document.getElementById('gameOverlay');
+        const content = document.getElementById('gameOverContent');
+        
+        
+        this.hideControls();
+        
+        if (this.scoreSaved) {
+            content.innerHTML = `
+                <h3>Игра окончена!</h3>
+                <p>Ваш счет: ${this.score}</p>
+                <p>Ваш рекорд сохранен</p>
+                <button class="reset-btn" onclick="game.newGame()">Начать заново</button>
+            `;
+        } else {
+            content.innerHTML = `
+                <h3>Игра окончена!</h3>
+                <p>Ваш счет: ${this.score}</p>
+                <input type="text" id="playerName" placeholder="Введите ваше имя" maxlength="20" autocomplete="off">
+                <button onclick="game.saveScore()">Сохранить результат</button>
+                <button class="reset-btn" onclick="game.newGame()">Начать заново</button>
+            `;
+        }
+        
+        overlay.classList.add('active');
+    }
+
+    hideGameOverlay() {
+        document.getElementById('gameOverlay').classList.remove('active');
+    }
+
+    saveScore() {
+        const nameInput = document.getElementById('playerName');
+        let name = nameInput ? nameInput.value.trim() : 'Аноним';
+        
+        if (!name) name = 'Аноним';
+        
+        const record = {
+            name: name,
+            score: this.score,
+            date: new Date().toLocaleDateString('ru-RU')
+        };
+        
+        this.leaderboard.push(record);
+        this.leaderboard.sort((a, b) => b.score - a.score);
+        this.leaderboard = this.leaderboard.slice(0, 10);
+        
+        localStorage.setItem('leaderboard2048', JSON.stringify(this.leaderboard));
+        
+        this.scoreSaved = true;
+        this.updateLeaderboardDisplay();
+        
+       
+        const content = document.getElementById('gameOverContent');
+        content.innerHTML = `
+            <h3>Игра окончена!</h3>
+            <p>Ваш счет: ${this.score}</p>
+            <p>Ваш рекорд сохранен</p>
+            <button class="reset-btn" onclick="game.newGame()">Начать заново</button>
+        `;
+    }
+
+    loadLeaderboard() {
+        const saved = localStorage.getItem('leaderboard2048');
+        return saved ? JSON.parse(saved) : [];
+    }
+
+    updateLeaderboardDisplay() {
+        const tbody = document.getElementById('leaderboardBody');
+        tbody.innerHTML = '';
+        
+        this.leaderboard.forEach(record => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${record.name}</td>
+                <td>${record.score}</td>
+                <td>${record.date}</td>
+            `;
+            tbody.appendChild(row);
+        });
+        
+        if (this.leaderboard.length === 0) {
+            const row = document.createElement('tr');
+            row.innerHTML = '<td colspan="3" style="text-align: center;">Нет записей</td>';
+            tbody.appendChild(row);
+        }
+    }
+
+    showLeaderboard() {
+        document.getElementById('leaderboardModal').classList.add('active');
+        this.hideControls();
+        this.updateLeaderboardDisplay();
+    }
+
+    hideLeaderboard() {
+        document.getElementById('leaderboardModal').classList.remove('active');
+        if (!this.gameOver) {
+            this.showControls();
+        }
+    }
+
+    hideControls() {
+        document.getElementById('controlButtons').style.display = 'none';
+    }
+
+    showControls() {
+        if (window.innerWidth <= 480 && !this.gameOver && !document.querySelector('.modal.active') && !document.querySelector('.game-overlay.active')) {
+            document.getElementById('controlButtons').style.display = 'grid';
+        }
+    }
 }
+
+
+const game = new Game2048();
+
+
+window.addEventListener('resize', () => {
+    game.showControls();
+});
