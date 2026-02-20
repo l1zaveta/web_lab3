@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2048 игра</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1 class="title">2048</h1>
+            <div class="score-container">
+                <div class="score-title">Счет</div>
+                <div class="score-value" id="score">0</div>
+            </div>
+        </div>
+
+     
+        <div class="board-container">
+            <div class="board" id="board">
+                
+            </div>
+            <div class="game-overlay" id="gameOverlay">
+                <div class="game-over-content" id="gameOverContent">
+
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="control-buttons" id="controlButtons">
+            <button class="control-btn up-btn" id="moveUp">▲</button>
+            <div class="horizontal-controls">
+                <button class="control-btn left-btn" id="moveLeft">◀</button>
+                <button class="control-btn down-btn" id="moveDown">▼</button>
+                <button class="control-btn right-btn" id="moveRight">▶</button>
+            </div>
+        </div>
+
+        
+        <div class="action-buttons">
+            <button class="action-btn" id="undoBtn">↩ Отмена</button>
+            <button class="action-btn" id="newGameBtn">🔄 Заново</button>
+            <button class="action-btn" id="leaderboardBtn">🏆 Рекорды</button>
+        </div>
+
+        
+        <div class="modal" id="leaderboardModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Таблица лидеров</h2>
+                    <span class="close-modal" id="closeModal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <table class="leaderboard-table" id="leaderboardTable">
+                        <thead>
+                            <tr>
+                                <th>Имя</th>
+                                <th>Счет</th>
+                                <th>Дата</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboardBody">
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
