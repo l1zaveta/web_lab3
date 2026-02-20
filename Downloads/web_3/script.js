@@ -163,4 +163,131 @@ class Game2048 {
         }
         return empty;
     }
+    addRandomTile() {
+        const empty = this.getEmptyCells();
+        if (empty.length > 0) {
+            const {x, y} = empty[Math.floor(Math.random() * empty.length)];
+            this.board[x][y] = Math.random() < 0.9 ? 2 : 4;
+        }
+    }
+
+    move(direction) {
+        if (this.gameOver || document.querySelector('.game-overlay.active') || document.querySelector('.modal.active')) return false;
+        
+        let moved = false;
+        let addedScore = 0;
+        
+        this.history.push({
+            board: JSON.parse(JSON.stringify(this.board)),
+            score: this.score
+        });
+        
+        if (direction === 'left') {
+            for (let i = 0; i < this.size; i++) {
+                const result = this.mergeLine(this.board[i]);
+                this.board[i] = result.line;
+                addedScore += result.score;
+                if (result.moved) moved = true;
+            }
+        } else if (direction === 'right') {
+            for (let i = 0; i < this.size; i++) {
+                const reversed = [...this.board[i]].reverse();
+                const result = this.mergeLine(reversed);
+                this.board[i] = result.line.reverse();
+                addedScore += result.score;
+                if (result.moved) moved = true;
+            }
+        } else if (direction === 'up') {
+            for (let j = 0; j < this.size; j++) {
+                const column = [];
+                for (let i = 0; i < this.size; i++) {
+                    column.push(this.board[i][j]);
+                }
+                const result = this.mergeLine(column);
+                for (let i = 0; i < this.size; i++) {
+                    this.board[i][j] = result.line[i];
+                }
+                addedScore += result.score;
+                if (result.moved) moved = true;
+            }
+        } else if (direction === 'down') {
+            for (let j = 0; j < this.size; j++) {
+                const column = [];
+                for (let i = this.size - 1; i >= 0; i--) {
+                    column.push(this.board[i][j]);
+                }
+                const result = this.mergeLine(column);
+                const reversedResult = result.line.reverse();
+                for (let i = 0; i < this.size; i++) {
+                    this.board[i][j] = reversedResult[i];
+                }
+                addedScore += result.score;
+                if (result.moved) moved = true;
+            }
+        }
+        
+        if (moved) {
+            this.score += addedScore;
+            
+            
+            const emptyCells = this.getEmptyCells();
+            if (emptyCells.length > 0) {
+                const tilesToAdd = Math.min(
+                    Math.random() < 0.7 ? 1 : 2,
+                    emptyCells.length
+                );
+                for (let i = 0; i < tilesToAdd; i++) {
+                    this.addRandomTile();
+                }
+            }
+            
+            this.animateMove();
+            this.animateMerge();
+            this.renderBoard();
+            this.saveGame();
+            
+            if (this.isGameOver()) {
+                this.gameOver = true;
+                this.showGameOver();
+            }
+            
+            return true;
+        } else {
+            this.history.pop();
+        }
+        
+        return false;
+    }
+
+    mergeLine(line) {
+        const filtered = line.filter(val => val !== 0);
+        const result = [];
+        let score = 0;
+        let moved = false;
+        
+        for (let i = 0; i < filtered.length; i++) {
+            if (i < filtered.length - 1 && filtered[i] === filtered[i + 1]) {
+                result.push(filtered[i] * 2);
+                score += filtered[i] * 2;
+                i++;
+                moved = true;
+            } else {
+                result.push(filtered[i]);
+            }
+        }
+        
+        while (result.length < this.size) {
+            result.push(0);
+        }
+        
+       
+        for (let i = 0; i < this.size; i++) {
+            if (line[i] !== result[i]) {
+                moved = true;
+                break;
+            }
+        }
+        
+        return { line: result, score, moved };
+    }
 }
